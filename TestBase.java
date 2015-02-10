@@ -34,9 +34,9 @@ public class TestBase {
   public void initWebDriver() {
     System.setProperty("webdriver.chrome.driver", "c:\\Program Files\\chromedriver\\chromedriver.exe");
     driver = new ChromeDriver();
-    driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+    driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
     jse = (JavascriptExecutor) driver;
-    wait = new WebDriverWait(driver, 30);
+    wait = new WebDriverWait(driver, 5);
   }
 
   @AfterSuite(alwaysRun = true)

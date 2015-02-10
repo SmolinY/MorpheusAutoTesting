@@ -2,11 +2,11 @@ package MorpheusAutoTesting;
 
 import static org.junit.Assert.*;
 
+import MorpheusAutoTesting.pages.*;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
@@ -16,216 +16,173 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 public class CreateTestStrategy extends TestBase {
-    private boolean acceptNextAlert = true;
 
     @Test()
     public void test() throws Exception {
         log("Opening " + baseUrl + "/webclient/");
         driver.get(baseUrl + "/webclient/");
-
         driver.switchTo().frame(driver.findElement(By.xpath("//iframe[@class='mainframe']")));
 
-        log("Type login and password");
-        fillInput("//input[../../../tr/td[text()='Login'] and @type='text' and @placeholder='Username']", "morpheus1");
-        fillInput("//input[../../../tr/td[text()='Password'] and @type='password' and @placeholder='Password']", "123");
-
         log("Authorization");
-        driver.findElement(By.xpath("//div[span[text()='Log In']]")).click();
-        assertTrue("Failed login", isElementPresent(By.xpath("//header/div/div[@class='km-view-title']/span[text()='Appointments']")));
+        boolean loginResult = new Login(driver).authorization("morpheus2", "12345");
+        assertTrue("Login failed", loginResult);
 
         String appointmentType = "AS_AUDIT";
-        log("Search scheduled appointment "+appointmentType);
-        By scheduleItem = By.xpath("//div[@class='m-field schedule-item' and @data-appointmenttype='"+appointmentType+"' and div/div[@class='appt-button__scheduled']]");
-        assertTrue("Appointment in not found", isElementPresent(scheduleItem));
-
-        log("Get dashboard page");
-        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.xpath("//div[contains(@class,'km-loader')]")));
-        driver.findElement(scheduleItem).click();
-        wait.withTimeout(40, TimeUnit.SECONDS).until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//header/div/div[@class='km-view-title']/span[text()='Dashboard']")));
-        assertTrue("Dashboard is not displayed", isElementPresent(By.xpath("//header/div/div[@class='km-view-title']/span[text()='Dashboard']")));
+        log("Search and get scheduled appointment "+appointmentType);
+        boolean searchResult = new Schedule(driver).getScheduledAppointment(appointmentType);
+        assertTrue("Appointment in not found", searchResult);
 
         log("Get site details page");
-        driver.findElement(By.xpath("//td[contains(@class,'dashboard-sitedetails')]")).click();
-
+        Dashboard dashboard = new Dashboard(driver);
+        SiteDetails siteDetailsPage = dashboard.getSiteDetails();
         log("Filling customer tab");
-        assertTrue("Customer tab is not displayed", isElementPresent(By.xpath("//li[@id='CustomerTab' and contains(@class,'km-state-active')]")));
-        fillInput("//div[contains(@class,'CustomerInformation-Name')]/div/input", "VERNON E HOFFAMANN");
-        fillInput("//div[contains(@class,'CustomerInformation-Street')]/div/input", "720 Forest Ave");
-        fillInput("//div[contains(@class,'CustomerInformation-City')]/div/input", "BELLEVILLE");
-        fillInput("//div[contains(@class,'CustomerInformation-State')]/div/input", "IL");
-        fillInput("//div[contains(@class,'CustomerInformation-Zip')]/div/input", "62220");
-        jse.executeScript("$('#SiteDetails').data('kendoMobileView').scroller.scrollTo(0,-500 );");
+        siteDetailsPage.getDisplayedForm()
+                .fillField("CustomerInformation-Name", "VERNON E HOFFAMANN")
+                .fillField("CustomerInformation-Street", "720 Forest Ave")
+                .fillField("CustomerInformation-City", "BELLEVILLE")
+                .fillField("CustomerInformation-State", "IL")
+                .fillField("CustomerInformation-Zip", "62220");
         String[] providers = {"AmerenElectric","AmerenGas"};
         for (int i = 0; i < providers.length; i++) {
             int providerNumber = i+1;
-            if (!isElementPresent(By.xpath("//header/span[text()='Utility Provider "+providerNumber+"']"))) {
-                driver.findElement(By.xpath("//header[text()='Utility providers']/div/span[@class='commonIcons-new']")).click();
-                jse.executeScript("$('#SiteDetails').data('kendoMobileView').scroller.scrollTo(0,-500 );");
-            }
-            fillSelect("//div[header/span[text()='Utility Provider "+providerNumber+"']]/div/div[contains(@class,'CustomerInformation-UtilityProvider-Name')]/div/select", providers[i]);
-            fillInput("//div[header/span[text()='Utility Provider "+providerNumber+"']]/div/div[contains(@class,'CustomerInformation-UtilityProvider-Account')]/div/input", "4045448975");
+            siteDetailsPage.checkProvider(providerNumber);
+            siteDetailsPage.getForm(By.xpath("//div[header/span[text()='Utility Provider " + providerNumber + "']]/div"))
+                    .fillField("CustomerInformation-UtilityProvider-Name",providers[i])
+                    .fillField("CustomerInformation-UtilityProvider-Account", "4045448975");
         }
 
         log("Open building tab");
-        jse.executeScript("$('#SiteDetails').data('kendoMobileView').scroller.scrollTo(0,500 );");
-        driver.findElement(By.xpath("//li[@id='BuildingTab']")).click();
-        assertTrue("Building tab is not displayed", isElementPresent(By.xpath("//li[@id='BuildingTab' and contains(@class,'km-state-active')]")));
+        siteDetailsPage.selectBuildingTab();
 
         log("Filling building tab");
-        fillSelect("//div[contains(@class,'BuildingInformation-DwellingType')]/div/select", "SingleFamilyDetached");
-        fillSelect("//div[contains(@class,'BuildingInformation-BuildingType')]/div/select", "TwotoFourFamily");
-        fillInput("//div[contains(@class,'BuildingInformation-YearBuilt')]/div/input", "2012");
-        fillInput("//div[contains(@class,'BuildingInformation-Bedrooms')]/div/input", "4");
-        fillInput("//div[contains(@class,'BuildingInformation-Occupants')]/div/input", "5");
-        fillSelect("//div[contains(@class,'BuildingInformation-FloorsAboveGrade')]/div/select", "2");
-        fillInput("//div[contains(@class,'BuildingInformation-AboveGradeConditionedFloorArea')]/div/input", "2500");
+        siteDetailsPage.getDisplayedForm()
+                .fillField("BuildingInformation-DwellingType", "SingleFamilyDetached")
+                .fillField("BuildingInformation-BuildingType", "TwotoFourFamily")
+                .fillField("BuildingInformation-YearBuilt", "2012")
+                .fillField("BuildingInformation-Bedrooms", "4")
+                .fillField("BuildingInformation-Occupants", "5")
+                .fillField("BuildingInformation-FloorsAboveGrade", "2")
+                .fillField("BuildingInformation-AboveGradeConditionedFloorArea", "2500");
+        log("Return back");
+        dashboard = siteDetailsPage.getLeftPanel().getDashboard();
 
         log("Open Air Tightness");
-        clickLeftItem("SiteDetails");
-        waitAndClick("//div[@class='drawerItem-child' and div/div/span[text()='Air Tightness']]");
+        ViewPage enclosure = dashboard.getEnclosure().getItem("Air Tightness", "AirTightness", "");
         log("Filling Air Tightness");
-        fillSelect("//div[contains(@class,'AirTightness-HouseLeakiness')]/div/select", "Average");
-        clickLeftItem("AirTightness");
-
-        log("Open Wall section");
-        driver.findElement(By.xpath("//li[@class='enclosureItem-item' and div/div/span[text()='Wall']]")).click();
-        log("Filling Wall form");
-        fillSelect("//div[contains(@class,'PrimaryWall-WallConstructionType')]/div/select", "WoodFrame");
-        fillSelect("//div[contains(@class,'PrimaryWall-WallInsulationType')]/div/select", "FiberglassBatt");
-        fillInput("//div[contains(@class,'PrimaryWall-WallInsulationThickness')]/div/input", "7");
+        enclosure.getDisplayedForm().fillField("AirTightness-HouseLeakiness","Average");
         log("Return back");
-        clickLeftItem("PrimaryWall");
+        enclosure.goBack();
 
-        log("Create wall 1");
-        checkEnclosure("Wall", "Exterior wall");
+        log("Open Wall");
+        enclosure = new ListPage(driver, "Enclosure").getItem("Wall", "PrimaryWall", "");
         log("Filling Wall form");
-        fillInput("//div[contains(@class,'ExteriorWall-Name')]/div/input", "Exterior wall");
-        fillSelect("//div[contains(@class,'ExteriorWall-WallOtherType')]/div/select", "AboveGradeExteriorWall");
-        fillInput("//div[contains(@class,'ExteriorWall-WallArea')]/div/input", "10");
+        enclosure.getDisplayedForm().fillField("PrimaryWall-WallConstructionType","WoodFrame")
+                .fillField("PrimaryWall-WallInsulationType","FiberglassBatt")
+                .fillField("PrimaryWall-WallInsulationThickness","7");
         log("Return back");
-        clickLeftItem("ExteriorWall");
+        enclosure.goBack();
 
-        log("Create wall 2");
-        checkEnclosure("Wall", "Foundation wall");
+        log("Open Exterior wall");
+        enclosure = new ListPage(driver, "Enclosure").getItem("Exterior wall", "ExteriorWall", "Wall");
         log("Filling Wall form");
-        fillInput("//div[contains(@class,'ExteriorWall-Name')]/div/input", "Foundation wall");
-        fillSelect("//div[contains(@class,'ExteriorWall-WallOtherType')]/div/select", "BelowGradeExteriorWall");
-        fillInput("//div[contains(@class,'ExteriorWall-WallArea')]/div/input", "10");
+        enclosure.getDisplayedForm().fillField("ExteriorWall-Name","Exterior wall")
+                .fillField("ExteriorWall-WallOtherType", "AboveGradeExteriorWall")
+                .fillField("ExteriorWall-WallArea","10");
         log("Return back");
-        clickLeftItem("ExteriorWall");
+        enclosure.goBack();
 
-        log("Create wall 3");
-        checkEnclosure("Wall", "Other wall");
+        log("Open Foundation wall");
+        enclosure = new ListPage(driver, "Enclosure").getItem("Foundation wall", "ExteriorWall", "Wall");
         log("Filling Wall form");
-        fillInput("//div[contains(@class,'ExteriorWall-Name')]/div/input", "Other wall");
-        fillSelect("//div[contains(@class,'ExteriorWall-WallOtherType')]/div/select", "AtticGableWall");
-        fillInput("//div[contains(@class,'ExteriorWall-WallArea')]/div/input", "10");
+        enclosure.getDisplayedForm().fillField("ExteriorWall-Name","Foundation wall")
+                .fillField("ExteriorWall-WallOtherType", "BelowGradeExteriorWall")
+                .fillField("ExteriorWall-WallArea", "10");
         log("Return back");
-        clickLeftItem("ExteriorWall");
+        enclosure.goBack();
+
+        log("Create other wall");
+        enclosure = new ListPage(driver, "Enclosure").getItem("Other wall", "ExteriorWall", "Wall");
+        log("Filling Wall form");
+        enclosure.getDisplayedForm().fillField("ExteriorWall-Name","Other wall")
+                .fillField("ExteriorWall-WallOtherType", "AtticGableWall")
+                .fillField("ExteriorWall-WallArea", "10");
+        log("Return back");
+        enclosure.goBack();
 
         log("Open Window section");
-        driver.findElement(By.xpath("//li[@class='enclosureItem-item' and div/div/span[text()='Window']]")).click();
+        enclosure = new ListPage(driver, "Enclosure").getItem("Window", "PrimaryWindow", "");
         log("Filling Window form");
-        fillSelect("//div[contains(@class,'PrimaryWindow-WindowGlazingType')]/div/select", "DoublePane");
-        fillSelect("//div[contains(@class,'PrimaryWindow-WindowFrameType')]/div/select", "Vinyl");
-        fillSelect("//div[contains(@class,'PrimaryWindow-StormWindows')]/div/select", "No");
+        enclosure.getDisplayedForm().fillField("PrimaryWindow-WindowGlazingType","DoublePane")
+                .fillField("PrimaryWindow-WindowFrameType", "Vinyl")
+                .fillField("PrimaryWindow-StormWindows", "No");
         log("Return back");
-        clickLeftItem("PrimaryWindow");
+        enclosure.goBack();
 
-        log("Open Foundation Space section");
-        driver.findElement(By.xpath("//li[@class='enclosureItem-item' and div/div/span[text()='Foundation Space' or text()='Conditional foundation space']]")).click();
+        log("Open Foundation Space");
+        enclosure = new ListPage(driver, "Enclosure").getItem("Foundation Space", "FoundationSpace", "Foundation Space");
         log("Filling Foundation Space form");
-        fillInput("//div[contains(@class,'FoundationSpace-Name')]/div/input", "Conditional foundation space");
-        fillSelect("//div[contains(@class,'FoundationSpace-FoundationType')]/div/select", "ConditionedBasement");
-        fillSelect("//div[contains(@class,'FoundationSpace-WallInsulationType')]/div/select", "None");
-        fillSelect("//div[contains(@class,'FoundationSpace-BasementFloorType')]/div/select", "Slab");
-        driver.findElement(By.xpath("//div[contains(@class,'FoundationSpace-FoundationArea')]/div/span")).click();
-        fillInput("//div[contains(@class,'FoundationSpace-FoundationArea') and span[text()='Conditional foundation space']]/span/input", "1000");
+        ViewPage enclosureParam = enclosure.getDisplayedForm().fillField("FoundationSpace-Name", "Foundation Space")
+                .fillField("FoundationSpace-FoundationType", "ConditionedBasement")
+                .fillField("FoundationSpace-WallInsulationType", "None")
+                .fillField("FoundationSpace-BasementFloorType", "Slab")
+                .clickOnField("FoundationSpace-FoundationArea", "foundationAreaDefine", driver);
+        enclosureParam.getForm(By.id("foundationArea")).fillField("FoundationSpace-FoundationArea", "1000");
         log("Return back");
-        clickLeftItem("foundationAreaDefine");
-        clickLeftItem("FoundationSpace");
+        enclosureParam.goBack();
+        enclosure.goBack();
 
-        log("Create Foundation Space");
-        checkEnclosure("Foundation Space", "Foundation space over garage");
+        log("Create Foundation space over garage");
+        enclosure = new ListPage(driver, "Enclosure").getItem("Foundation space over garage", "FoundationSpace", "Foundation Space");
         log("Filling Foundation Space form");
-        fillInput("//div[contains(@class,'FoundationSpace-Name')]/div/input", "Foundation space over garage");
-        fillSelect("//div[contains(@class,'FoundationSpace-FoundationType')]/div/select", "FloorOverGarage");
-        fillSelect("//div[contains(@class,'FoundationSpace-BasementCeilingInsulationType')]/div/select", "FiberglassBatt");
-        fillInput("//div[contains(@class,'FoundationSpace-BasementCeilingInsulationDepth')]/div/input", "7");
-        waitAndClick("//div[contains(@class,'FoundationSpace-FoundationArea')]/div/span");
-        fillInput("//div[contains(@class,'FoundationSpace-FoundationArea') and span[text()='Foundation space over garage']]/span/input", "400");
-        log("Return to dashboard");
-        clickLeftItem("foundationAreaDefine");
-        clickLeftItem("FoundationSpace");
+        enclosureParam = enclosure.getDisplayedForm().fillField("FoundationSpace-Name", "Foundation space over garage")
+                .fillField("FoundationSpace-FoundationType", "FloorOverGarage")
+                .fillField("FoundationSpace-BasementCeilingInsulationType", "FiberglassBatt")
+                .fillField("FoundationSpace-BasementCeilingInsulationDepth", "7")
+                .clickOnField("FoundationSpace-FoundationArea", "foundationAreaDefine", driver);
+        enclosureParam.getForm(By.id("foundationArea")).fillField("FoundationSpace-FoundationArea", "400");
+        log("Return back");
+        enclosureParam.goBack();
+        enclosure.goBack();
 
         log("Open attic");
-        driver.findElement(By.xpath("//li[@class='enclosureItem-item' and div/div/span[text()='Attic']]")).click();
+        enclosure = new ListPage(driver, "Enclosure").getItem("Attic", "Attic", "Attic");
         log("Filling attic form");
-        fillSelect("//div[contains(@class,'Attic-PrimaryAtticType')]/div/select", "Attic");
-        fillSelect("//div[contains(@class,'Attic-InsulationType')]/div/select", "FiberglassBatt");
-        fillInput("//div[contains(@class,'Attic-InsulationDepth')]/div/input", "0");
-        fillSelect("//div[contains(@class,'Attic-InsulationQuality')]/div/select", "Fair");
-        driver.findElement(By.xpath("//div[contains(@class,'Attic-Area')]/div/span")).click();
-        fillInput("//div[contains(@class,'Attic-Area')]/span/input", "1000");
+        enclosureParam = enclosure.getDisplayedForm().fillField("Attic-PrimaryAtticType","Attic")
+                .fillField("Attic-InsulationType", "FiberglassBatt")
+                .fillField("Attic-InsulationDepth", "0")
+                .fillField("Attic-InsulationQuality", "Fair")
+                .clickOnField("Attic-Area", "atticAreaDefine", driver);
+        enclosureParam.getForm(By.className("listPlaceholder")).fillField("Attic-Area", "1000");
         log("Return back");
-        clickLeftItem("atticAreaDefine");
-        clickLeftItem("Attic");
-
-        log("Open Dashboard");
-        clickLeftItem("Enclosure");
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@id='leftPanel']")));
-        waitAndClick("//div[@id='leftPanel']/header/a[text()='Dashboard']");
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//header/div/div[@class='km-view-title']/span[text()='Dashboard']")));
+        enclosureParam.goBack();
+        enclosure.goBack();
+        dashboard = new ListPage(driver, "Enclosure").getLeftPanel().getDashboard();
 
         log("Open HVAC");
-        waitAndClick("//td[contains(@class,'dashboard-hvac')]");
-        log("Add HVAC");
-        try {
-            driver.findElement(By.xpath("//li[@class='hvacItem-item' and div/div/span[text()='HVACd']]")).click();
-        }
-        catch (WebDriverException e){
-            waitAndClick("//div[@id='HVAC']/header/div/div[@class='km-rightitem']/a");
-            waitAndClick("//div[@class='extended-list-selection-item']/span[text()='HVAC']");
-        }
+        dashboard.getHVAC().getItem("HVACd", "HVAC", "HVAC");
         log("Filling HVAC form");
-        fillInput("//div[contains(@class,'HVAC-Name')]/div/input", "HVACd");
-        fillSelect("//div[contains(@class,'HVAC-HVACSystemType')]/div/select", "HeatingAndCooling");
-        fillSelect("//div[contains(@class,'HVAC-HeatingSystemType')]/div/select", "Gshp");
-        fillInput("//div[contains(@class,'HVAC-HeatingYear')]/div/input", "2012");
-        Select DistributionSystem = new Select(driver.findElement(By.xpath("//div[contains(@class,'HVAC-DistributionSystemId')]/div/div/select")));
-        if (!DistributionSystem.getFirstSelectedOption().getText().equals("Distribution system 1")) {
-            fillSelect("//div[contains(@class,'HVAC-DistributionSystemId')]/div/div/select", "--ADD-NEW--");
-        }
-        waitAndClick("//a[@id='hvacSelectDistributionButton']");
-        fillSelect("//div[contains(@class,'DistributionSystem-HeatDistributionType')]/div/select", "Duct");
-        log("Return to dashboard");
-        clickLeftItem("ductItem");
-        clickLeftItem("HVAC");
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@id='leftPanel']")));
-        waitAndClick("//div[@id='leftPanel']/header/a[text()='Dashboard']");
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//header/div/div[@class='km-view-title']/span[text()='Dashboard']")));
+        Hvac hvac = new Hvac(driver);
+        hvac.getDisplayedForm().fillField("HVAC-Name", "HVACd")
+                .fillField("HVAC-HVACSystemType", "HeatingAndCooling")
+                .fillField("HVAC-HeatingSystemType","Gshp")
+                .fillField("HVAC-HeatingYear","2012");
+        ViewPage distributionPage = hvac.getDistributionPage();
+        distributionPage.getDisplayedForm().fillField("DistributionSystem-HeatDistributionType", "Duct");
+        log("Return back");
+        distributionPage.goBack();
+        dashboard = new ListPage(driver, "HVAC").getLeftPanel().getDashboard();
 
         log("Open Water Heater");
-        waitAndClick("//td[div/span[text()='Water Heater']]");
-        log("Add HVAC");
-        try {
-            driver.findElement(By.xpath("//li[@class='dhwItem-item' and div/div/span[text()='Water Heater']]")).click();
-        }
-        catch (WebDriverException e){
-            waitAndClick("//div[@id='DHW']/header/div/div[@class='km-rightitem']/a");
-        }
+        ViewPage waterHeater = dashboard.getWaterHeater().getItem("Water Heater", "dhwHeater");
         log("Filling Water Heater form");
-        fillInput("//div[contains(@class,'WaterHeater-Name')]/div/input", "Water Heater");
-        fillSelect("//div[contains(@class,'WaterHeater-FuelType')]/div/select", "Electricity");
-        log("Return to dashboard");
-        clickLeftItem("dhwHeater");
-        clickLeftItem("DHW");
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@id='leftPanel']")));
-        waitAndClick("//div[@id='leftPanel']/header/a[text()='Dashboard']");
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//header/div/div[@class='km-view-title']/span[text()='Dashboard']")));
-        log("Open recommendation");
+        waterHeater.getDisplayedForm().fillField("WaterHeater-Name","Water Heater")
+                .fillField("WaterHeater-FuelType", "Electricity");
+        log("Return back");
+        waterHeater.goBack();
+        dashboard = new ListPage(driver, "DHW").getLeftPanel().getDashboard();
+
+        /*log("Open recommendation");
         driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
         waitAndClick("//td[contains(@class,'dashboard-measures')]");
         WebElement modalWindow = driver.findElement(By.xpath("//div[@class='wizard-list-selection-placeholder-first-page']"));
@@ -263,7 +220,7 @@ public class CreateTestStrategy extends TestBase {
         waitAndClick("//div[@id='Savings']/footer/button[@id='completeButton']");
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@id='Report']")));
         waitAndClick("//div[@id='Report']/footer/button[@id='completeButton']");
-        driver.findElement(By.xpath("//div[@id='drawScreen']/footer/div/span[span[@class='flaticon-mark']]")).click();
+        driver.findElement(By.xpath("//div[@id='drawScreen']/footer/div/span[span[@class='flaticon-mark']]")).click();*/
 
     }
 
