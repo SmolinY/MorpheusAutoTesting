@@ -2,6 +2,7 @@ package MorpheusAutoTesting.pages;
 
 
 import MorpheusAutoTesting.elements.Form;
+import MorpheusAutoTesting.utils.WaitForScriptsCondition;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -12,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ViewPage {
     protected WebDriver driver;
-    protected WebElement page;
+    public WebElement page;
     protected JavascriptExecutor jse;
     protected WebDriverWait wait;
 
@@ -33,14 +34,14 @@ public class ViewPage {
         List<WebElement> forms = page.findElements(By.xpath(".//div[contains(@class,'basic-fields')]"));
         for (WebElement form : forms){
             if (form.isDisplayed()) {
-                return new Form(form);
+                return new Form(form, driver);
             }
         }
         throw new Exception("Form not found");
     }
 
     public Form getForm(By by) {
-        return new Form(page.findElement(by));
+        return new Form(page.findElement(by), driver);
     }
 
     public void scrollDown(){
@@ -69,5 +70,9 @@ public class ViewPage {
         WebElement btn = page.findElement(By.xpath(".//a[contains(@class,'layout-panel-back')]"));
         wait.until(ExpectedConditions.visibilityOf(btn));
         btn.click();
+    }
+
+    public void clickSave(){
+        page.findElement(By.xpath(".//span[span[@class='flaticon-mark']]")).click();
     }
 }

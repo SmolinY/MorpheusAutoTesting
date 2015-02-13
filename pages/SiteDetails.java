@@ -3,6 +3,7 @@ package MorpheusAutoTesting.pages;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import ru.yandex.qatools.htmlelements.element.Button;
 
 public class SiteDetails extends ViewPage{
@@ -18,9 +19,11 @@ public class SiteDetails extends ViewPage{
 
     public void checkProvider(int providerNumber){
         scrollDown();
-        if (!isElementPresent(By.xpath("//header/span[text()='Utility Provider " + providerNumber + "']"))) {
+        By providerLocator = By.xpath("//header/span[text()='Utility Provider " + providerNumber + "']");
+        if (!isElementPresent(providerLocator)) {
             addProviderBtn.click();
             scrollDown();
+            wait.until(ExpectedConditions.visibilityOfElementLocated(providerLocator));
         }
     }
 

@@ -21,6 +21,12 @@ public class Dashboard extends ViewPage{
     @FindBy(xpath = "//td[contains(@class,'dashboard-dhw')]")
     public Button dhw;
 
+    @FindBy(xpath = "//td[contains(@class,'dashboard-measures')]")
+    public Button measures;
+
+    @FindBy(id = "makeReportButton")
+    public Button makeReportButton;
+
     public SiteDetails getSiteDetails(){
         siteDetails.click();
         return new SiteDetails(driver);
@@ -39,5 +45,15 @@ public class Dashboard extends ViewPage{
     public ListPage getEnclosure(){
         enclosure.click();
         return new ListPage(driver, "Enclosure");
+    }
+
+    public Recommendation getRecommendation(){
+        measures.click();
+        return new Recommendation(driver);
+    }
+
+    public PreviewReport makeReport(){
+        makeReportButton.click();
+        return new PreviewReport(driver);
     }
 }

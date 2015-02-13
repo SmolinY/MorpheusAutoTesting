@@ -11,7 +11,7 @@ public class Schedule extends ViewPage{
     }
 
     public boolean getScheduledAppointment(String type){
-        By scheduleItem = By.xpath("//div[@class='m-field schedule-item' and @data-appointmenttype='"+type+"' and div/div[@class='appt-button__scheduled' or @class='appt-button__inprogress']]");
+        By scheduleItem = By.xpath("//div[@class='m-field schedule-item' and @data-appointmenttype='"+type+"' and div/div[@class='appt-button__scheduled']]");
         wait.until(ExpectedConditions.invisibilityOfElementLocated(By.xpath("//div[contains(@class,'km-loader')]")));
         try {
             page.findElement(scheduleItem).click();
