@@ -212,7 +212,7 @@ public class CreateTestStrategy extends TestBase {
 
         dashboard.makeReport().completeReport().signReport().clickSave();
         ViewPage thanks = new ViewPage(driver, "Thanks");
-        assertTrue("Appointment is not found", thanks.page.findElement(By.xpath(".//div[@class='message-thanks']")).getText().equals("Your audit is complete and has been submitted"));
+        assertTrue("Audit is not complete", thanks.page.findElement(By.xpath(".//div[@class='message-thanks']")).getText().equals("Your audit is complete and has been submitted"));
 
     }
 }

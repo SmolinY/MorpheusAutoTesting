@@ -24,8 +24,10 @@ public class ViewPage {
         this.wait = new WebDriverWait(driver, 60);
         jse = (JavascriptExecutor) driver;
 
+        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.xpath("//div[contains(@style,'z-index: 20000')]")));
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id(pageId)));
         this.page = driver.findElement(By.id(pageId));
+        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.xpath("//div[@id='"+pageId+"']//div[contains(@style,'z-index: 20000')]")));
 
         HtmlElementLoader.populatePageObject(this, driver);
     }
