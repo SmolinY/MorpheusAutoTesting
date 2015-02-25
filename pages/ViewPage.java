@@ -23,13 +23,30 @@ public class ViewPage {
 
         this.wait = new WebDriverWait(driver, 60);
         jse = (JavascriptExecutor) driver;
-
+        checkConfirmationWindow();
+        checkErrorWindow();
         wait.until(ExpectedConditions.invisibilityOfElementLocated(By.xpath("//div[contains(@style,'z-index: 20000')]")));
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id(pageId)));
         this.page = driver.findElement(By.id(pageId));
         wait.until(ExpectedConditions.invisibilityOfElementLocated(By.xpath("//div[@id='"+pageId+"']//div[contains(@style,'z-index: 20000')]")));
 
         HtmlElementLoader.populatePageObject(this, driver);
+    }
+
+    public void checkConfirmationWindow(){
+        try {
+            wait.withTimeout(1,TimeUnit.SECONDS).until(ExpectedConditions.visibilityOfElementLocated(By.id("confirmationView")));
+            driver.findElement(By.xpath("//div[@id='confirmationView']//a[contains(@class,'buttonYes')]")).click();
+        } catch (Exception e) {}
+        this.wait = new WebDriverWait(driver, 60);
+    }
+
+    public void checkErrorWindow(){
+        try {
+            wait.withTimeout(1,TimeUnit.SECONDS).until(ExpectedConditions.visibilityOfElementLocated(By.id("error-view")));
+            driver.findElement(By.xpath("//div[@id='error-view']//a[contains(@class,'km-button')]")).click();
+        } catch (Exception e) {}
+        this.wait = new WebDriverWait(driver, 60);
     }
 
     public Form getDisplayedForm() throws Exception {

@@ -26,4 +26,8 @@ public class ModalWindow extends ViewPage {
         }
         throw new Exception("No items with name "+itemName);
     }
+
+    public void cancel(){
+        page.findElement(By.xpath(".//a[span[text()='Cancel']]")).click();
+    }
 }

@@ -1,8 +1,12 @@
 package MorpheusAutoTesting.pages;
 
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import ru.yandex.qatools.htmlelements.element.Button;
+
+import java.util.concurrent.TimeUnit;
 
 public class Dashboard extends ViewPage{
     public Dashboard(WebDriver driver){
@@ -54,6 +58,7 @@ public class Dashboard extends ViewPage{
 
     public PreviewReport makeReport(){
         makeReportButton.click();
+        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.xpath("//div[contains(@class,'km-shim km-modalview-root k-state-border-down')]")));
         return new PreviewReport(driver);
     }
 }

@@ -10,6 +10,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import ru.yandex.qatools.htmlelements.element.Select;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -59,7 +60,7 @@ public class Form {
                 if (select.getFirstSelectedOption().getAttribute("value").isEmpty()) {
                     for (WebElement option : select.getOptions()) {
                         String optionValue = option.getAttribute("value");
-                        if (!optionValue.isEmpty()) {
+                        if (!optionValue.isEmpty() && !option.getAttribute("class").equals("conditionally-hidden-field")) {
                             select.selectByValue(optionValue);
                             break;
                         }
@@ -70,6 +71,20 @@ public class Form {
                 select.selectByValue(value);
             }
         }
+        return this;
+    }
+
+    public Form fillFields(List<WebElement> fields, String value){
+        for (WebElement field : fields) {
+            fillField(field, value);
+        }
+        return this;
+    }
+
+    public Form fillFieldsSomeData(){
+        String requiredFields = ".//div[contains(@class,'required-field')]//input[not(@readonly='readonly')] |" +
+                                ".//div[contains(@class,'required-field')]//select[not(@readonly='readonly')]";
+        fillFields(form.findElements(By.xpath(requiredFields)), SOME_DATA);
         return this;
     }
 
@@ -91,9 +106,7 @@ public class Form {
         String requiredFields = ".//div[contains(@class,'required-field')]//input[not(@readonly='readonly')] |" +
                 ".//div[contains(@class,'required-field')]//select[not(@readonly='readonly')] |"+
                 ".//div[contains(@class,'DistributionSystemId')]//select";
-        for (WebElement field : driver.findElements(By.xpath(requiredFields)) ) {
-            fillField(field, SOME_DATA);
-        }
+        fillFields(driver.findElements(By.xpath(requiredFields)), SOME_DATA);
     }
 
 

@@ -1,6 +1,7 @@
 package MorpheusAutoTesting.pages;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -18,12 +19,37 @@ public class Recommendation extends ViewPage{
     public Button majorMeasure;
 
     public Recommendation addRecommendation(String name, String windowItem, String secondWindowItem, String pageId) throws Exception {
-        WebElement element = page.findElement(By.xpath(".//div[contains(@class,'recommendation-type "+name+"')]/span"));
+        WebElement element;
+        try {
+            element = page.findElement(By.xpath(".//div[contains(@class,'recommendation-type " + name + "') and not(contains(@class,'hidden-field'))]/span"));
+        }
+        catch (NoSuchElementException e) {
+            return new Recommendation(driver);
+        }
         if (!element.isDisplayed()) scrollDown();
         element.findElement(By.xpath("./span[contains(@class,'commonIcons-new')]")).click();
 
-        if (!windowItem.isEmpty()) new ModalWindow(driver,"wizard-list-selection").getItemByName(windowItem).click();
-        if (!secondWindowItem.isEmpty()) new ModalWindow(driver,"wizard-list-selection").getItemByName(secondWindowItem).click();
+        ModalWindow modalWindow;
+        if (!windowItem.isEmpty()) {
+            modalWindow = new ModalWindow(driver,"wizard-list-selection");
+            try {
+                modalWindow.getItemByName(windowItem).click();
+            }
+            catch (Exception e){
+                modalWindow.cancel();
+                return new Recommendation(driver);
+            }
+        }
+        if (!secondWindowItem.isEmpty()) {
+            modalWindow = new ModalWindow(driver,"wizard-list-selection");
+            try {
+                modalWindow.getItemByName(secondWindowItem).click();
+            }
+            catch (Exception e){
+                modalWindow.cancel();
+                return new Recommendation(driver);
+            }
+        }
         wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("wizard-list-selection")));
         new ViewPage(driver, pageId).getDisplayedForm().clickOnPartsField().selectFirstPart();
         ViewPage recommendation = new ViewPage(driver, pageId);
